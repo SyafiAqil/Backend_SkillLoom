@@ -1,0 +1,179 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ======================================================
+// ENUMS
+// ======================================================
+enum Role {
+  SISWA
+  UMKM
+  ADMIN
+}
+
+enum ProjectStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum PaymentStatus {
+  UNPAID
+  ESCROW_HELD
+  RELEASED
+  FAILED
+}
+
+// ======================================================
+// MODUL AUTENTIKASI & PROFIL
+// ======================================================
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role
+  isVerified   Boolean  @default(false) @map("is_verified")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  siswaProfile SiswaProfile?
+  umkmProfile  UmkmProfile?
+  adminProfile AdminProfile?
+
+  @@map("users")
+}
+
+model SiswaProfile {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @unique @map("user_id") @db.ObjectId
+  fullName      String   @map("full_name")
+  nisn          String   @unique
+  jurusan       String   // Contoh: "RPL", "DKV"
+  bio           String?
+  bankName      String?  @map("bank_name")
+  accountNumber String?  @map("account_number")
+
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications  ProjectApplication[]
+  transactions  Transaction[]
+  showcases     Showcase[]
+
+  @@map("siswa_profiles")
+}
+
+model UmkmProfile {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @unique @map("user_id") @db.ObjectId
+  companyName  String   @map("company_name")
+  industryType String   @map("industry_type") // Contoh: "Kuliner", "Fashion"
+  address      String?
+  phoneNumber  String   @map("phone_number")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects     Project[]
+  transactions Transaction[]
+
+  @@map("umkm_profiles")
+}
+
+model AdminProfile {
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String @unique @map("user_id") @db.ObjectId
+  schoolName String @map("school_name")
+  position   String // Contoh: "Guru Pembimbing RPL"
+
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_profiles")
+}
+
+// ======================================================
+// MODUL PROYEK & PELAMARAN (CRUD)
+// ======================================================
+model Project {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  umkmId        String        @map("umkm_id") @db.ObjectId
+  title         String
+  description   String
+  category      String        // Contoh: "RPL", "DKV"
+  budget        Float         // Di MongoDB/Prisma direkomendasikan memakai Float/Int untuk nilai uang
+  deadline      DateTime
+  status        ProjectStatus @default(OPEN)
+  adminApproved Boolean       @default(false) @map("admin_approved")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  umkm          UmkmProfile          @relation(fields: [umkmId], references: [id], onDelete: Cascade)
+  applications  ProjectApplication[]
+  transaction   Transaction?
+  showcase      Showcase?
+
+  @@map("projects")
+}
+
+model ProjectApplication {
+  id           String            @id @default(auto()) @map("_id") @db.ObjectId
+  projectId    String            @map("project_id") @db.ObjectId
+  siswaId      String            @map("siswa_id") @db.ObjectId
+  pitchMessage String            @map("pitch_message")
+  status       ApplicationStatus @default(PENDING)
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  siswa        SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, siswaId]) // Mencegah siswa melamar proyek yang sama lebih dari 1x
+  @@map("project_applications")
+}
+
+// ======================================================
+// MODUL TRANSAKSI & PEMBAYARAN (ESCROW)
+// ======================================================
+model Transaction {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  projectId     String        @unique @map("project_id") @db.ObjectId
+  umkmId        String        @map("umkm_id") @db.ObjectId
+  siswaId       String        @map("siswa_id") @db.ObjectId
+  amount        Float
+  paymentStatus PaymentStatus @default(UNPAID) @map("payment_status")
+  paymentProof  String?       @map("payment_proof") // URL Bukti Transfer / Invoice ID Gateway
+  paidAt        DateTime?     @map("paid_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  umkm          UmkmProfile  @relation(fields: [umkmId], references: [id], onDelete: Cascade)
+  siswa         SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+// ======================================================
+// MODUL LANDING PAGE & SHOWCASE (BRANDING)
+// ======================================================
+model Showcase {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId   String   @unique @map("project_id") @db.ObjectId
+  siswaId     String   @map("siswa_id") @db.ObjectId
+  title       String
+  imageUrl    String   @map("image_url")
+  testimonial String?
+  rating      Int?     // Nilai 1 - 5
+  isFeatured  Boolean  @default(false) @map("is_featured")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  siswa       SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@map("showcases")
+}
