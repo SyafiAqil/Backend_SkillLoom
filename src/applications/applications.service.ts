@@ -1,19 +1,23 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateApplicationDto } from './dto/create-application.dto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CreateApplicationDto } from './dto/create-application.dto';
+import { UpdateApplicationDto } from './dto/update-application.dto';
+import { ApplicationStatus } from '@prisma/client';
 
 @Injectable()
 export class ApplicationsService {
   constructor(private prisma: PrismaService) { }
 
-  // 1. Siswa Melamar Proyek
+  // ==========================================
+  // 1. CREATE (SISWA: Melamar Proyek)
+  // ==========================================
   async create(dto: CreateApplicationDto, userId: string) {
-    // Cari profil Siswa berdasarkan userId
     const siswaProfile = await this.prisma.siswaProfile.findUnique({
       where: { userId },
     });
@@ -24,7 +28,6 @@ export class ApplicationsService {
       );
     }
 
-    // Cek apakah proyek ada
     const project = await this.prisma.project.findUnique({
       where: { id: dto.projectId },
     });
@@ -33,7 +36,6 @@ export class ApplicationsService {
       throw new NotFoundException('Proyek tidak ditemukan!');
     }
 
-    // Cek apakah siswa sudah pernah melamar di proyek ini
     const existingApplication = await this.prisma.projectApplication.findUnique(
       {
         where: {
@@ -62,7 +64,9 @@ export class ApplicationsService {
     });
   }
 
-  // 2. Lihat Semua Lamaran Milik Siswa
+  // ==========================================
+  // 2. READ (Ambil Semua Lamaran Milik Siswa)
+  // ==========================================
   async findMyApplications(userId: string) {
     const siswaProfile = await this.prisma.siswaProfile.findUnique({
       where: { userId },
@@ -84,19 +88,62 @@ export class ApplicationsService {
       orderBy: { createdAt: 'desc' },
     });
   }
-  // 3. UMKM Melihat Daftar Pelamar di Proyek Miliknya
+
+  // ==========================================
+  // 3. READ (Ambil Detail 1 Lamaran Berdasarkan ID)
+  // ==========================================
+  async findOne(id: string, userId: string) {
+    const application = await this.prisma.projectApplication.findUnique({
+      where: { id },
+      include: {
+        project: {
+          include: {
+            umkm: true,
+          },
+        },
+        siswa: true,
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Lamaran tidak ditemukan!');
+    }
+
+    // Pengecekan Hak Akses: Hanya Siswa pembuat atau UMKM pemilik proyek yang bisa akses detail ini
+    const siswaProfile = await this.prisma.siswaProfile.findUnique({ where: { userId } });
+    const umkmProfile = await this.prisma.umkmProfile.findUnique({ where: { userId } });
+
+    const isApplicant = siswaProfile && application.siswaId === siswaProfile.id;
+    const isOwner = umkmProfile && application.project.umkmId === umkmProfile.id;
+
+    if (!isApplicant && !isOwner) {
+      throw new ForbiddenException('Anda tidak berhak melihat lamaran ini.');
+    }
+
+    return application;
+  }
+
+  // ==========================================
+  // 4. READ (UMKM: Melihat Pelamar pada Suatu Proyek)
+  // ==========================================
   async findApplicantsByProject(projectId: string, userId: string) {
-    // Pastikan proyek tersebut ada dan benar milik UMKM yang sedang login
+    const umkmProfile = await this.prisma.umkmProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!umkmProfile) {
+      throw new ForbiddenException('Profil UMKM tidak ditemukan.');
+    }
+
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
-      include: { umkm: true },
     });
 
     if (!project) {
       throw new NotFoundException('Proyek tidak ditemukan!');
     }
 
-    if (project.umkm.userId !== userId) {
+    if (project.umkmId !== umkmProfile.id) {
       throw new BadRequestException('Anda tidak memiliki akses ke proyek ini!');
     }
 
@@ -117,18 +164,58 @@ export class ApplicationsService {
     });
   }
 
-  // 4. UMKM Menerima atau Menolak Pelamar
+  // ==========================================
+  // 5. UPDATE (SISWA: Edit Pitch Message Lamaran)
+  // ==========================================
+  async update(id: string, dto: UpdateApplicationDto, userId: string) {
+    const siswaProfile = await this.prisma.siswaProfile.findUnique({
+      where: { userId },
+    });
+
+    const application = await this.prisma.projectApplication.findUnique({
+      where: { id },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Lamaran tidak ditemukan!');
+    }
+
+    if (application.siswaId !== siswaProfile?.id) {
+      throw new ForbiddenException('Anda tidak berhak mengedit lamaran ini!');
+    }
+
+    // Jika lamaran sudah diproses (Diterima / Ditolak), Siswa tidak boleh mengedit lagi
+    if (application.status !== ApplicationStatus.PENDING) {
+      throw new BadRequestException(
+        'Lamaran yang sudah diproses tidak dapat diubah lagi!',
+      );
+    }
+
+    return this.prisma.projectApplication.update({
+      where: { id },
+      data: { pitchMessage: dto.pitchMessage },
+      include: {
+        project: true,
+      },
+    });
+  }
+
+  // ==========================================
+  // 6. UPDATE STATUS (UMKM: Terima / Tolak Pelamar)
+  // ==========================================
   async updateStatus(
     applicationId: string,
-    status: 'ACCEPTED' | 'REJECTED',
+    status: ApplicationStatus,
     userId: string,
   ) {
+    const umkmProfile = await this.prisma.umkmProfile.findUnique({
+      where: { userId },
+    });
+
     const application = await this.prisma.projectApplication.findUnique({
       where: { id: applicationId },
       include: {
-        project: {
-          include: { umkm: true },
-        },
+        project: true,
       },
     });
 
@@ -136,12 +223,14 @@ export class ApplicationsService {
       throw new NotFoundException('Lamaran tidak ditemukan!');
     }
 
-    if (application.project.umkm.userId !== userId) {
-      throw new BadRequestException('Anda tidak berhak mengubah status lamaran ini!');
+    if (application.project.umkmId !== umkmProfile?.id) {
+      throw new BadRequestException(
+        'Anda tidak berhak mengubah status lamaran ini!',
+      );
     }
 
-    // Jika diterima, ubah status proyek menjadi IN_PROGRESS
-    if (status === 'ACCEPTED') {
+    // Jika lamaran Diterima, ubah status Proyek Utama menjadi IN_PROGRESS
+    if (status === ApplicationStatus.ACCEPTED) {
       await this.prisma.project.update({
         where: { id: application.projectId },
         data: { status: 'IN_PROGRESS' },
@@ -156,7 +245,32 @@ export class ApplicationsService {
         project: true,
       },
     });
-
   }
 
+  // ==========================================
+  // 7. DELETE (SISWA: Batalkan / Hapus Lamaran)
+  // ==========================================
+  async remove(id: string, userId: string) {
+    const siswaProfile = await this.prisma.siswaProfile.findUnique({
+      where: { userId },
+    });
+
+    const application = await this.prisma.projectApplication.findUnique({
+      where: { id },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Lamaran tidak ditemukan!');
+    }
+
+    if (application.siswaId !== siswaProfile?.id) {
+      throw new ForbiddenException('Anda tidak berhak menghapus lamaran ini!');
+    }
+
+    await this.prisma.projectApplication.delete({
+      where: { id },
+    });
+
+    return { message: 'Lamaran berhasil dibatalkan dan dihapus.' };
+  }
 }

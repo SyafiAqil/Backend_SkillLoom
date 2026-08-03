@@ -1,4 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateApplicationDto } from './create-application.dto';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-export class UpdateApplicationDto extends PartialType(CreateApplicationDto) {}
+export class UpdateApplicationDto {
+    @IsNotEmpty({ message: 'Pesan penawaran (pitching) wajib diisi' })
+    @IsString()
+    pitchMessage!: string;
+}

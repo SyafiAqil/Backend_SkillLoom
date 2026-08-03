@@ -1,60 +1,88 @@
 import {
-  Body,
   Controller,
-  Get,
-  Param,
-  Patch,
   Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
+import { UpdateApplicationDto } from './dto/update-application.dto';
+import { UpdateStatusDto } from './dto/update-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { Role } from '@prisma/client';
 
 @Controller('applications')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 export class ApplicationsController {
-  constructor(private readonly applicationsService: ApplicationsService) {}
+  constructor(private readonly applicationsService: ApplicationsService) { }
 
-  // 🔒 POST /applications -> Khusus SISWA melamar proyek
-  @Roles(Role.SISWA)
+  // 1. [CREATE] Melamar Proyek (Siswa)
   @Post()
-  create(
+  async create(
+    @GetUser('id') userId: string,
     @Body() dto: CreateApplicationDto,
-    @GetUser('sub') userId: string,
   ) {
     return this.applicationsService.create(dto, userId);
   }
 
-  // 🔒 GET /applications/my -> Siswa melihat daftar lamaran miliknya
-  @Roles(Role.SISWA)
-  @Get('my')
-  findMyApplications(@GetUser('sub') userId: string) {
+  // 2. [READ ALL] Lihat Semua Lamaran Milik Siswa
+  @Get('my-applications')
+  async findMyApplications(@GetUser('id') userId: string) {
     return this.applicationsService.findMyApplications(userId);
   }
 
-  // 🔒 GET /applications/project/:projectId -> Khusus UMKM melihat pelamar di proyeknya
-  @Roles(Role.UMKM)
+  // 3. [READ BY PROJECT] Lihat Semua Pelamar di Proyek Tertentu (UMKM)
   @Get('project/:projectId')
-  findApplicantsByProject(
+  async findApplicantsByProject(
     @Param('projectId') projectId: string,
-    @GetUser('sub') userId: string,
+    @GetUser('id') userId: string,
   ) {
     return this.applicationsService.findApplicantsByProject(projectId, userId);
   }
 
-  // 🔒 PATCH /applications/:id/status -> Khusus UMKM terima/tolak pelamar
-  @Roles(Role.UMKM)
-  @Patch(':id/status')
-  updateStatus(
-    @Param('id') applicationId: string,
-    @Body('status') status: 'ACCEPTED' | 'REJECTED',
-    @GetUser('sub') userId: string,
+  // 4. [READ ONE] Lihat Detail 1 Lamaran
+  @Get(':id')
+  async findOne(
+    @Param('id') id: string,
+    @GetUser('id') userId: string,
   ) {
-    return this.applicationsService.updateStatus(applicationId, status, userId);
+    return this.applicationsService.findOne(id, userId);
+  }
+
+  // 5. [UPDATE PITCH] Edit Pesan Lamaran (Siswa)
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateApplicationDto,
+    @GetUser('id') userId: string,
+  ) {
+    return this.applicationsService.update(id, dto, userId);
+  }
+
+  // 6. [UPDATE STATUS] Menerima / Menolak Pelamar (UMKM)
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') applicationId: string,
+    @Body() dto: UpdateStatusDto,
+    @GetUser('id') userId: string,
+  ) {
+    return this.applicationsService.updateStatus(
+      applicationId,
+      dto.status,
+      userId,
+    );
+  }
+
+  // 7. [DELETE] Batalkan / Hapus Lamaran (Siswa)
+  @Delete(':id')
+  async remove(
+    @Param('id') id: string,
+    @GetUser('id') userId: string,
+  ) {
+    return this.applicationsService.remove(id, userId);
   }
 }
