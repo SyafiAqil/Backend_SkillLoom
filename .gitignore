@@ -60,3 +60,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # AI IDEs and editors
 .agents
 
+.postman_collection.json
+

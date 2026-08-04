@@ -1,0 +1,698 @@
+{
+    "info": {
+        "_postman_id": "skillloom-backend-api-collection",
+        "name": "SkillLoom Backend API Collection",
+        "description": "Dokumentasi API lengkap SkillLoom Backend (NestJS + Prisma + MongoDB)",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3001",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Register Siswa",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"siswa@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Budi Santoso\",\n  \"nisn\": \"1234567890\",\n  \"jurusan\": \"RPL\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/register/siswa",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register",
+                                "siswa"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Register UMKM",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"umkm@example.com\",\n  \"password\": \"password123\",\n  \"companyName\": \"Kopi Maju Jaya\",\n  \"industryType\": \"Kuliner\",\n  \"phoneNumber\": \"081234567890\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/register/umkm",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register",
+                                "umkm"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Register Admin/Guru",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\",\n  \"schoolName\": \"SMKN 1 Jakarta\",\n  \"position\": \"Guru Pembimbing RPL\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/register/admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register",
+                                "admin"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"umkm@example.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Users Profile",
+            "item": [
+                {
+                    "name": "Get Profile Saya (Me)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Profile Siswa",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"bio\": \"Fullstack Developer SMK Negeri 1\",\n  \"bankName\": \"Bank BCA\",\n  \"accountNumber\": \"1234567890\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/users/profile/siswa",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                "profile",
+                                "siswa"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Profile UMKM",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"companyName\": \"Kopi Maju Jaya Digital\",\n  \"address\": \"Jl. Merdeka No. 10 Jakarta\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/users/profile/umkm",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                "profile",
+                                "umkm"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Projects",
+            "item": [
+                {
+                    "name": "Buat Proyek Baru (UMKM)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Website Ordering Cafe\",\n  \"description\": \"Membuat website pemesanan menu online cafe berbasis React/Next.js\",\n  \"category\": \"RPL\",\n  \"budget\": 1500000,\n  \"deadline\": \"2026-09-01T00:00:00.000Z\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/projects",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "projects"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Lihat Semua Proyek Approved (Publik)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/projects?category=RPL&search=website",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "projects"
+                            ],
+                            "query": [
+                                {
+                                    "key": "category",
+                                    "value": "RPL"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "website"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Lihat Proyek Pending Approval (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/projects/pending",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "projects",
+                                "pending"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Approve Proyek (Admin)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/projects/:id/approve",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "projects",
+                                ":id",
+                                "approve"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "64f1a2b3c4d5e6f7a8b9c0d1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Lihat Proyek Saya (UMKM)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/projects/my",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "projects",
+                                "my"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Detail 1 Proyek",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/projects/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "projects",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "64f1a2b3c4d5e6f7a8b9c0d1"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Applications",
+            "item": [
+                {
+                    "name": "Melamar Proyek (Siswa)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"projectId\": \"64f1a2b3c4d5e6f7a8b9c0d1\",\n  \"pitchMessage\": \"Saya berpengalaman membuat frontend Next.js dan siap menyelesaikan proyek ini tepat waktu.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/applications",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "applications"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Lihat Semua Lamaran Saya (Siswa)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/applications/my-applications",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "applications",
+                                "my-applications"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Lihat Pelamar pada Proyek (UMKM)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/applications/project/:projectId",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "applications",
+                                "project",
+                                ":projectId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "projectId",
+                                    "value": "64f1a2b3c4d5e6f7a8b9c0d1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Terima / Tolak Pelamar (UMKM)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/applications/:id/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "applications",
+                                ":id",
+                                "status"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "64f1a2b3c4d5e6f7a8b9c0d2"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Transactions Escrow",
+            "item": [
+                {
+                    "name": "Inisiasi Pembayaran Escrow (UMKM)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"projectId\": \"64f1a2b3c4d5e6f7a8b9c0d1\",\n  \"amount\": 1500000,\n  \"paymentProof\": \"https://storage.example.com/proofs/transfer_123.jpg\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/transactions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "transactions"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Verifikasi Transfer (Set ESCROW_HELD)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"paymentStatus\": \"ESCROW_HELD\",\n  \"paymentProof\": \"https://storage.example.com/proofs/transfer_123.jpg\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/transactions/:id/hold",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "transactions",
+                                ":id",
+                                "hold"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "64f1a2b3c4d5e6f7a8b9c0d3"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Cairkan Dana ke Siswa (RELEASED)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/transactions/:id/release",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "transactions",
+                                ":id",
+                                "release"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "64f1a2b3c4d5e6f7a8b9c0d3"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Lihat Histori Transaksi Saya",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/transactions/my",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "transactions",
+                                "my"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Showcases",
+            "item": [
+                {
+                    "name": "Publikasikan Showcase Portofolio",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"projectId\": \"64f1a2b3c4d5e6f7a8b9c0d1\",\n  \"title\": \"Aplikasi Ordering Cafe Next.js\",\n  \"imageUrl\": \"https://storage.example.com/showcases/cafe_app.png\",\n  \"testimonial\": \"Hasil pekerjaan sangat memuaskan dan rapi!\",\n  \"rating\": 5,\n  \"isFeatured\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/showcases",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "showcases"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Lihat Daftar Showcase (Publik / Featured)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/showcases?featured=true",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "showcases"
+                            ],
+                            "query": [
+                                {
+                                    "key": "featured",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Detail 1 Showcase",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/showcases/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "showcases",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "64f1a2b3c4d5e6f7a8b9c0d4"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

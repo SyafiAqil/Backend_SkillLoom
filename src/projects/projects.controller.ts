@@ -22,7 +22,7 @@ import { Role } from '@prisma/client';
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
-  // 🔒 POST /projects -> UMKM membuat proyek baru
+  // 🔒 POST /projects -> UMKM membuat proyek baru (status adminApproved: false)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.UMKM)
   @Post()
@@ -33,13 +33,29 @@ export class ProjectsController {
     return this.projectsService.create(createProjectDto, userId);
   }
 
-  // 🌐 GET /projects -> Lihat semua proyek (+ fitur pencarian ?search= & ?category=)
+  // 🌐 GET /projects -> Lihat proyek publik (hanya yang adminApproved: true)
   @Get()
   findAll(
     @Query('category') category?: string,
     @Query('search') search?: string,
   ) {
     return this.projectsService.findAll(category, search);
+  }
+
+  // 🔒 GET /projects/pending -> Admin melihat daftar proyek yang menunggu persetujuan
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('pending')
+  findPendingApproval() {
+    return this.projectsService.findPendingApproval();
+  }
+
+  // 🔒 PATCH /projects/:id/approve -> Admin menyetujui proyek UMKM
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Patch(':id/approve')
+  approveProject(@Param('id') id: string) {
+    return this.projectsService.approveProject(id);
   }
 
   // 🔒 GET /projects/my -> UMKM melihat semua proyek yang pernah dibuatnya

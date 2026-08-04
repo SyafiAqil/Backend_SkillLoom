@@ -36,6 +36,12 @@ export class ApplicationsService {
       throw new NotFoundException('Proyek tidak ditemukan!');
     }
 
+    if (!project.adminApproved) {
+      throw new BadRequestException(
+        'Proyek ini belum disetujui oleh Admin/Guru Pembimbing.',
+      );
+    }
+
     const existingApplication = await this.prisma.projectApplication.findUnique(
       {
         where: {

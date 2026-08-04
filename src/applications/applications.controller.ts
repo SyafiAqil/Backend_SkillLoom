@@ -23,7 +23,7 @@ export class ApplicationsController {
   // 1. [CREATE] Melamar Proyek (Siswa)
   @Post()
   async create(
-    @GetUser('id') userId: string,
+    @GetUser('sub') userId: string,
     @Body() dto: CreateApplicationDto,
   ) {
     return this.applicationsService.create(dto, userId);
@@ -31,7 +31,7 @@ export class ApplicationsController {
 
   // 2. [READ ALL] Lihat Semua Lamaran Milik Siswa
   @Get('my-applications')
-  async findMyApplications(@GetUser('id') userId: string) {
+  async findMyApplications(@GetUser('sub') userId: string) {
     return this.applicationsService.findMyApplications(userId);
   }
 
@@ -39,7 +39,7 @@ export class ApplicationsController {
   @Get('project/:projectId')
   async findApplicantsByProject(
     @Param('projectId') projectId: string,
-    @GetUser('id') userId: string,
+    @GetUser('sub') userId: string,
   ) {
     return this.applicationsService.findApplicantsByProject(projectId, userId);
   }
@@ -48,7 +48,7 @@ export class ApplicationsController {
   @Get(':id')
   async findOne(
     @Param('id') id: string,
-    @GetUser('id') userId: string,
+    @GetUser('sub') userId: string,
   ) {
     return this.applicationsService.findOne(id, userId);
   }
@@ -58,7 +58,7 @@ export class ApplicationsController {
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateApplicationDto,
-    @GetUser('id') userId: string,
+    @GetUser('sub') userId: string,
   ) {
     return this.applicationsService.update(id, dto, userId);
   }
@@ -68,7 +68,7 @@ export class ApplicationsController {
   async updateStatus(
     @Param('id') applicationId: string,
     @Body() dto: UpdateStatusDto,
-    @GetUser('id') userId: string,
+    @GetUser('sub') userId: string,
   ) {
     return this.applicationsService.updateStatus(
       applicationId,
@@ -81,7 +81,7 @@ export class ApplicationsController {
   @Delete(':id')
   async remove(
     @Param('id') id: string,
-    @GetUser('id') userId: string,
+    @GetUser('sub') userId: string,
   ) {
     return this.applicationsService.remove(id, userId);
   }

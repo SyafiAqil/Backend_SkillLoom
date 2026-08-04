@@ -12,7 +12,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
-  // 1. Buat Proyek Baru (Khusus UMKM)
+  // 1. Buat Proyek Baru (Khusus UMKM - Butuh Admin Approval)
   async create(createProjectDto: CreateProjectDto, userId: string) {
     const umkmProfile = await this.prisma.umkmProfile.findUnique({
       where: { userId },
@@ -29,17 +29,19 @@ export class ProjectsService {
         category: createProjectDto.category,
         budget: createProjectDto.budget,
         deadline: new Date(createProjectDto.deadline),
+        adminApproved: false, // Menunggu persetujuan Admin/Guru
         umkmId: umkmProfile.id,
       },
       include: { umkm: true },
     });
   }
 
-  // 2. Ambil Semua Proyek (Publik / Pencarian / Filter)
+  // 2. Ambil Semua Proyek yang Sudah Disetujui (Publik / Filter)
   async findAll(category?: string, search?: string) {
     return this.prisma.project.findMany({
       where: {
-        status: 'OPEN', // Hanya tampilkan proyek yang masih buka
+        status: 'OPEN',
+        adminApproved: true, // Hanya proyek yang disetujui Admin yang tampil di katalog publik
         ...(category && { category }),
         ...(search && {
           OR: [
@@ -61,7 +63,35 @@ export class ProjectsService {
     });
   }
 
-  // 3. Ambil Proyek Milik UMKM yang Sedang Login
+  // 3. Ambil Proyek Menunggu Persetujuan Admin (Khusus Admin)
+  async findPendingApproval() {
+    return this.prisma.project.findMany({
+      where: { adminApproved: false },
+      include: {
+        umkm: {
+          select: {
+            companyName: true,
+            industryType: true,
+            phoneNumber: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // 4. Setujui Proyek (Khusus Admin)
+  async approveProject(id: string) {
+    const project = await this.prisma.project.findUnique({ where: { id } });
+    if (!project) throw new NotFoundException('Proyek tidak ditemukan');
+
+    return this.prisma.project.update({
+      where: { id },
+      data: { adminApproved: true },
+    });
+  }
+
+  // 5. Ambil Proyek Milik UMKM yang Sedang Login
   async findMyProjects(userId: string) {
     const umkmProfile = await this.prisma.umkmProfile.findUnique({
       where: { userId },
@@ -80,7 +110,7 @@ export class ProjectsService {
     });
   }
 
-  // 4. Ambil Detail Proyek berdasarkan ID
+  // 6. Ambil Detail Proyek berdasarkan ID
   async findOne(id: string) {
     const project = await this.prisma.project.findUnique({
       where: { id },
@@ -101,11 +131,10 @@ export class ProjectsService {
     return project;
   }
 
-  // 5. Update Proyek (Hanya Pemilik Proyek)
+  // 7. Update Proyek (Hanya Pemilik Proyek)
   async update(id: string, updateProjectDto: UpdateProjectDto, userId: string) {
     const project = await this.findOne(id);
 
-    // Cek apakah proyek ini milik UMKM yang sedang login
     const umkmProfile = await this.prisma.umkmProfile.findUnique({
       where: { userId },
     });
@@ -125,7 +154,7 @@ export class ProjectsService {
     });
   }
 
-  // 6. Hapus Proyek (Hanya Pemilik Proyek)
+  // 8. Hapus Proyek (Hanya Pemilik Proyek)
   async remove(id: string, userId: string) {
     const project = await this.findOne(id);
 
