@@ -8,9 +8,13 @@ import { ApplicationsModule } from './applications/applications.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { ShowcasesModule } from './showcases/showcases.module';
 import { UsersModule } from './users/users.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // WAJIB ada agar process.env/ConfigService terbaca di seluruh Strategy
+    }),
     AuthModule,
     PrismaModule,
     ProjectsModule,
@@ -22,4 +26,4 @@ import { UsersModule } from './users/users.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

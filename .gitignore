@@ -58,7 +58,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /generated/prisma
 
 # AI IDEs and editors
-.agents
+.agents/
 
 .postman_collection.json
+
 
