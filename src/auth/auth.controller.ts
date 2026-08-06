@@ -42,9 +42,9 @@ export class AuthController {
   }
 
   @Get('google/callback')
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(GoogleAuthGuard) // atau UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req: any, @Res() res: any) {
-    // Ambil role dari state OAuth Google
+    // 1. Fitur Kode Pertama: Ambil role dari state OAuth Google
     let role: 'SISWA' | 'UMKM' = 'SISWA';
     if (req.query.state) {
       try {
@@ -55,8 +55,16 @@ export class AuthController {
       }
     }
 
+    // 2. Fitur Kode Pertama: Validasi user dengan parameter req.user & role
     const result = await this.authService.validateGoogleUser(req.user, role);
-    return res.json(result);
+
+    // 3. Fitur Kode Kedua: Ambil URL Frontend dari Environment Variable
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    // 4. Fitur Kode Kedua: Redirect otomatis ke Frontend membawa token dan role
+    return res.redirect(
+      `${frontendUrl}/auth/callback?token=${result.access_token}&role=${result.user.role}`
+    );
   }
 
   @UseGuards(JwtAuthGuard)
