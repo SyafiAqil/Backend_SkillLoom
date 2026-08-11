@@ -127,6 +127,95 @@
                             ]
                         }
                     }
+                },
+                {
+                    "name": "Login Google via POST (Frontend SDK Token)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"token\": \"YOUR_GOOGLE_ID_TOKEN_OR_ACCESS_TOKEN\",\n  \"role\": \"SISWA\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/google",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "google"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Google Redirect (Siswa)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/google?role=SISWA",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "google"
+                            ],
+                            "query": [
+                                {
+                                    "key": "role",
+                                    "value": "SISWA",
+                                    "description": "Role target pendaftaran via Google OAuth (SISWA)"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Google (UMKM)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/google?role=UMKM",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "google"
+                            ],
+                            "query": [
+                                {
+                                    "key": "role",
+                                    "value": "UMKM",
+                                    "description": "Role target pendaftaran via Google OAuth (UMKM)"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Google Callback Redirect",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/google/callback",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "google",
+                                "callback"
+                            ]
+                        }
+                    }
                 }
             ]
         },
@@ -483,6 +572,80 @@
                                 "applications",
                                 ":id",
                                 "status"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "64f1a2b3c4d5e6f7a8b9c0d2"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Kirim Tautan Hasil Karya (Siswa)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"submissionLink\": \"https://github.com/username/project-repo\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/applications/:id/submit",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "applications",
+                                ":id",
+                                "submit"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "64f1a2b3c4d5e6f7a8b9c0d2"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Catatan Revisi / ACC Karya (UMKM / Admin)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"reviewStatus\": \"REVISION_REQUESTED\",\n  \"revisionNote\": \"Mohon perbaiki tampilan responsive di mobile screen dan perbaiki form validation.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/applications/:id/revision",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "applications",
+                                ":id",
+                                "revision"
                             ],
                             "variable": [
                                 {

@@ -4,12 +4,11 @@ import { RegisterSiswaDto } from './dto/register-siswa.dto';
 import { RegisterUmkmDto } from './dto/register-umkm.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from './decorators/get-user.decorator';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import express from 'express';
-
-
 
 @Controller('auth')
 export class AuthController {
@@ -35,6 +34,11 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  // 🔒 POST /auth/google -> Frontend SDK / Direct Token Exchange
+  @Post('google')
+  async googleAuthPost(@Body() dto: GoogleLoginDto) {
+    return this.authService.googleLoginPost(dto);
+  }
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)

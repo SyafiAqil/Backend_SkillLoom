@@ -12,6 +12,8 @@ import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { SubmitApplicationDto } from './dto/submit-application.dto';
+import { ReviewApplicationDto } from './dto/review-application.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 
@@ -84,5 +86,25 @@ export class ApplicationsController {
     @GetUser('sub') userId: string,
   ) {
     return this.applicationsService.remove(id, userId);
+  }
+
+  // 8. [SUBMIT WORK] Siswa mengirim tautan hasil karya
+  @Post(':id/submit')
+  async submitWork(
+    @Param('id') id: string,
+    @Body() dto: SubmitApplicationDto,
+    @GetUser('sub') userId: string,
+  ) {
+    return this.applicationsService.submitWork(id, dto, userId);
+  }
+
+  // 9. [REVIEW / REVISION] UMKM / Admin memberikan catatan revisi atau menyetujui karya
+  @Patch(':id/revision')
+  async reviewWork(
+    @Param('id') id: string,
+    @Body() dto: ReviewApplicationDto,
+    @GetUser('sub') userId: string,
+  ) {
+    return this.applicationsService.reviewWork(id, dto, userId);
   }
 }

@@ -83,4 +83,133 @@ export class UsersService {
       data: dto,
     });
   }
+
+  // ==========================================
+  // FETCH ALL & DETAIL PROFIL SISWA (TALENT)
+  // ==========================================
+  async findAllSiswa(jurusan?: string, search?: string) {
+    const whereCondition: any = {};
+
+    if (jurusan) {
+      whereCondition.jurusan = { contains: jurusan, mode: 'insensitive' };
+    }
+
+    if (search) {
+      whereCondition.OR = [
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { bio: { contains: search, mode: 'insensitive' } },
+        { jurusan: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    return this.prisma.siswaProfile.findMany({
+      where: whereCondition,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            isVerified: true,
+          },
+        },
+        showcases: true,
+      },
+      orderBy: { fullName: 'asc' },
+    });
+  }
+
+  async findSiswaById(id: string) {
+    // Cari berdasarkan SiswaProfile ID atau User ID
+    const siswa = await this.prisma.siswaProfile.findFirst({
+      where: {
+        OR: [{ id }, { userId: id }],
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            isVerified: true,
+          },
+        },
+        showcases: true,
+        applications: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    });
+
+    if (!siswa) {
+      throw new NotFoundException('Profil Siswa tidak ditemukan!');
+    }
+
+    return siswa;
+  }
+
+  // ==========================================
+  // FETCH ALL & DETAIL PROFIL UMKM
+  // ==========================================
+  async findAllUmkm(industryType?: string, search?: string) {
+    const whereCondition: any = {};
+
+    if (industryType) {
+      whereCondition.industryType = { contains: industryType, mode: 'insensitive' };
+    }
+
+    if (search) {
+      whereCondition.OR = [
+        { companyName: { contains: search, mode: 'insensitive' } },
+        { industryType: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    return this.prisma.umkmProfile.findMany({
+      where: whereCondition,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            isVerified: true,
+          },
+        },
+        projects: {
+          where: { adminApproved: true },
+        },
+      },
+      orderBy: { companyName: 'asc' },
+    });
+  }
+
+  async findUmkmById(id: string) {
+    // Cari berdasarkan UmkmProfile ID atau User ID
+    const umkm = await this.prisma.umkmProfile.findFirst({
+      where: {
+        OR: [{ id }, { userId: id }],
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            isVerified: true,
+          },
+        },
+        projects: {
+          where: { adminApproved: true },
+        },
+      },
+    });
+
+    if (!umkm) {
+      throw new NotFoundException('Profil UMKM tidak ditemukan!');
+    }
+
+    return umkm;
+  }
 }

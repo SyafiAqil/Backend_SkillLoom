@@ -8,6 +8,8 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
+import { SubmitApplicationDto } from './dto/submit-application.dto';
+import { ReviewApplicationDto } from './dto/review-application.dto';
 import { ApplicationStatus } from '@prisma/client';
 
 @Injectable()
@@ -278,5 +280,103 @@ export class ApplicationsService {
     });
 
     return { message: 'Lamaran berhasil dibatalkan dan dihapus.' };
+  }
+
+  // ==========================================
+  // 8. SUBMIT WORK (SISWA: Kirim Tautan Karya)
+  // ==========================================
+  async submitWork(id: string, dto: SubmitApplicationDto, userId: string) {
+    const siswaProfile = await this.prisma.siswaProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!siswaProfile) {
+      throw new ForbiddenException('Profil Siswa tidak ditemukan.');
+    }
+
+    const application = await this.prisma.projectApplication.findUnique({
+      where: { id },
+      include: { project: true },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Lamaran tidak ditemukan!');
+    }
+
+    if (application.siswaId !== siswaProfile.id) {
+      throw new ForbiddenException(
+        'Anda tidak berhak mengunggah hasil karya pada lamaran ini!',
+      );
+    }
+
+    if (application.status !== ApplicationStatus.ACCEPTED) {
+      throw new BadRequestException(
+        'Hanya lamaran yang telah diterima (ACCEPTED) yang dapat mengirimkan hasil karya.',
+      );
+    }
+
+    return this.prisma.projectApplication.update({
+      where: { id },
+      data: {
+        submissionLink: dto.submissionLink,
+        reviewStatus: 'UNDER_REVIEW',
+      },
+      include: {
+        project: true,
+        siswa: true,
+      },
+    });
+  }
+
+  // ==========================================
+  // 9. REVIEW WORK (UMKM / ADMIN: Catatan Revisi & ACC Karya)
+  // ==========================================
+  async reviewWork(id: string, dto: ReviewApplicationDto, userId: string) {
+    const application = await this.prisma.projectApplication.findUnique({
+      where: { id },
+      include: { project: true },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Lamaran tidak ditemukan!');
+    }
+
+    const umkmProfile = await this.prisma.umkmProfile.findUnique({
+      where: { userId },
+    });
+    const adminProfile = await this.prisma.adminProfile.findUnique({
+      where: { userId },
+    });
+
+    const isOwner = umkmProfile && application.project.umkmId === umkmProfile.id;
+    const isAdmin = !!adminProfile;
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException(
+        'Anda tidak berhak memberikan catatan revisi atau meninjau karya proyek ini!',
+      );
+    }
+
+    const updatedApplication = await this.prisma.projectApplication.update({
+      where: { id },
+      data: {
+        reviewStatus: dto.reviewStatus,
+        ...(dto.revisionNote !== undefined && { revisionNote: dto.revisionNote }),
+      },
+      include: {
+        project: true,
+        siswa: true,
+      },
+    });
+
+    // Jika reviewStatus disetujui (APPROVED), ubah status Proyek Utama menjadi COMPLETED
+    if (dto.reviewStatus === 'APPROVED') {
+      await this.prisma.project.update({
+        where: { id: application.projectId },
+        data: { status: 'COMPLETED' },
+      });
+    }
+
+    return updatedApplication;
   }
 }

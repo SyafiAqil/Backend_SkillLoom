@@ -123,15 +123,18 @@ model Project {
 }
 
 model ProjectApplication {
-  id           String            @id @default(auto()) @map("_id") @db.ObjectId
-  projectId    String            @map("project_id") @db.ObjectId
-  siswaId      String            @map("siswa_id") @db.ObjectId
-  pitchMessage String            @map("pitch_message")
-  status       ApplicationStatus @default(PENDING)
-  createdAt    DateTime          @default(now()) @map("created_at")
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  projectId       String            @map("project_id") @db.ObjectId
+  siswaId         String            @map("siswa_id") @db.ObjectId
+  pitchMessage    String            @map("pitch_message")
+  status          ApplicationStatus @default(PENDING)
+  submissionLink  String?           @map("submission_link")
+  revisionNote    String?           @map("revision_note")
+  reviewStatus    String?           @map("review_status") // UNDER_REVIEW, REVISION_REQUESTED, APPROVED
+  createdAt       DateTime          @default(now()) @map("created_at")
 
-  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  siswa        SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  project         Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  siswa           SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, siswaId]) // Mencegah siswa melamar proyek yang sama lebih dari 1x
   @@map("project_applications")

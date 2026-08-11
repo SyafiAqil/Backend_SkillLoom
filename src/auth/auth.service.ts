@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 
 @Injectable()
 export class AuthService {
@@ -152,7 +153,63 @@ export class AuthService {
       },
     };
   }
-  // ... (Method LOGIN tetap sama) ...
+
+  // 4. GOOGLE LOGIN VIA POST (FRONTEND TOKEN SDK / CREDENTIAL)
+  async googleLoginPost(dto: GoogleLoginDto) {
+    let googleUserData: { email: string; firstName: string; lastName: string };
+
+    try {
+      // 1. Coba verifikasi sebagai ID Token (Google OAuth 2.0 Credential / ID Token)
+      const tokenInfoRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${dto.token}`,
+      );
+
+      if (tokenInfoRes.ok) {
+        const payload = await tokenInfoRes.json();
+        googleUserData = {
+          email: payload.email,
+          firstName: payload.given_name || payload.name || 'User',
+          lastName: payload.family_name || '',
+        };
+      } else {
+        // 2. Fallback: Coba verifikasi sebagai Access Token (Google UserInfo API)
+        const userInfoRes = await fetch(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          {
+            headers: { Authorization: `Bearer ${dto.token}` },
+          },
+        );
+
+        if (!userInfoRes.ok) {
+          throw new UnauthorizedException(
+            'Token Google tidak valid atau telah kedaluwarsa!',
+          );
+        }
+
+        const payload = await userInfoRes.json();
+        googleUserData = {
+          email: payload.email,
+          firstName: payload.given_name || payload.name || 'User',
+          lastName: payload.family_name || '',
+        };
+      }
+    } catch (error: any) {
+      if (error instanceof UnauthorizedException) throw error;
+      throw new UnauthorizedException(
+        'Gagal memverifikasi token Google: ' +
+          (error.message || 'Terjadi kesalahan jaringan'),
+      );
+    }
+
+    const targetRole = dto.role || 'SISWA';
+    const result = await this.validateGoogleUser(googleUserData, targetRole);
+
+    return {
+      message: 'Login Google berhasil!',
+      ...result,
+    };
+  }
+
   // LOGIKA LOGIN
   async login(dto: LoginDto) {
     // 1. Cari user berdasarkan email beserta semua profil yang terkait
