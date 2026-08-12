@@ -63,7 +63,7 @@ export class AuthController {
     const result = await this.authService.validateGoogleUser(req.user, role);
 
     // 3. Fitur Kode Kedua: Ambil URL Frontend dari Environment Variable
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL;
 
     // 4. Fitur Kode Kedua: Redirect otomatis ke Frontend membawa token dan role
     return res.redirect(
